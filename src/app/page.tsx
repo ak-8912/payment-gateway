@@ -1,65 +1,140 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useState } from "react";
+
+import PaymentForm from "@/components/payment/PaymentForm";
+import StatusScreen from "@/components/payment/StatusScreen";
+import RetrySection from "@/components/payment/RetrySection";
+
+import TransactionHistory from "@/components/history/TransactionHistory";
+
+import { usePaymentStore } from "@/store/paymentStore";
+import { Transaction } from "@/types/payment";
+import { usePayment } from "@/hooks/usePayment";
+
+export default function HomePage() {
+  const {
+    status,
+    attempts,
+    history,
+    setStatus,
+    addTransaction,
+    transactionId,
+    setHistory,
+  } = usePaymentStore();
+
+  const { retryPayment } = usePayment();
+
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<Transaction | null>(null);
+
+  // Load history from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem("transactions");
+
+    if (stored) {
+      const parsed: Transaction[] = JSON.parse(stored);
+
+      // parsed.forEach((tx) => addTransaction(tx));
+      setHistory(parsed);
+    }
+  }, [addTransaction]);
+
+  // Save history
+  useEffect(() => {
+    localStorage.setItem("transactions", JSON.stringify(history));
+  }, [history]);
+
+  // Add latest transaction to history
+  useEffect(() => {
+    if (status === "SUCCESS" || status === "FAILED" || status === "TIMEOUT") {
+      if (!transactionId) return;
+
+      const transaction: Transaction = {
+        id: transactionId,
+        amount: 0,
+        status,
+        timestamp: Date.now(),
+        attempts,
+      };
+
+      addTransaction(transaction);
+    }
+  }, [status, attempts, transactionId, addTransaction]);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main className="min-h-screen bg-gray-100 py-10 px-4">
+      <div className="mx-auto max-w-6xl space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold">Payment Gateway</h1>
+
+          <p className="text-gray-600 mt-2">
+            Simulated payment flow using Next.js
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+
+        <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
+          <div className="rounded-2xl bg-white p-6 shadow-sm">
+            <PaymentForm />
+
+            <StatusScreen status={status} />
+
+            {(status === "FAILED" || status === "TIMEOUT") && (
+              <RetrySection attempts={attempts} onRetry={retryPayment} />
+            )}
+
+            {(status === "SUCCESS" ||
+              status === "FAILED" ||
+              status === "TIMEOUT") && (
+              <button
+                onClick={() => setStatus("IDLE")}
+                className="mt-4 w-full rounded-lg border py-3"
+              >
+                Start New Payment
+              </button>
+            )}
+          </div>
+
+          <div className="rounded-2xl bg-white p-6 shadow-sm">
+            <div className="mb-4">
+              <h2 className="text-xl font-semibold">Transaction History</h2>
+            </div>
+
+            <TransactionHistory
+              transactions={history}
+              onSelect={(tx) => setSelectedTransaction(tx)}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          </div>
         </div>
-      </main>
-    </div>
+
+        {selectedTransaction && (
+          <div className="rounded-2xl bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-semibold mb-4">Transaction Details</h2>
+
+            <div className="space-y-2 text-sm">
+              <p>
+                <span className="font-medium">Transaction ID:</span>{" "}
+                {selectedTransaction.id}
+              </p>
+
+              <p>
+                <span className="font-medium">Status:</span>{" "}
+                {selectedTransaction.status}
+              </p>
+
+              <p>
+                <span className="font-medium">Attempts:</span>{" "}
+                {selectedTransaction.attempts}
+              </p>
+
+              <p>
+                <span className="font-medium">Timestamp:</span>{" "}
+                {new Date(selectedTransaction.timestamp).toLocaleString()}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </main>
   );
 }
