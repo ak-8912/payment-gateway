@@ -22,7 +22,8 @@ export default function HomePage() {
     attempts,
     history,
     paymentDetails,
-    setStatus,
+    failureReason,
+    resetPayment,
     addTransaction,
     transactionId,
     setHistory,
@@ -60,6 +61,7 @@ export default function HomePage() {
         amount: paymentDetails?.amount ?? 0,
         currency: paymentDetails?.currency ?? "INR",
         cardholderName: paymentDetails?.cardholderName,
+        failureReason: failureReason ?? undefined,
         status,
         timestamp: Date.now(),
         attempts,
@@ -67,7 +69,14 @@ export default function HomePage() {
 
       addTransaction(transaction);
     }
-  }, [status, attempts, transactionId, paymentDetails, addTransaction]);
+  }, [
+    status,
+    attempts,
+    transactionId,
+    paymentDetails,
+    failureReason,
+    addTransaction,
+  ]);
 
   return (
     <main className="min-h-screen bg-muted px-4 py-10">
@@ -89,7 +98,10 @@ export default function HomePage() {
               <CardContent className="p-6">
                 <PaymentForm />
 
-                <StatusScreen status={status} />
+                <StatusScreen
+                  status={status}
+                  reason={failureReason ?? undefined}
+                />
 
                 {(status === "FAILED" || status === "TIMEOUT") && (
                   <RetrySection attempts={attempts} onRetry={retryPayment} />
@@ -101,7 +113,7 @@ export default function HomePage() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => setStatus("IDLE")}
+                    onClick={resetPayment}
                     className="mt-4 h-11 w-full text-sm"
                   >
                     Start New Payment
@@ -155,6 +167,13 @@ export default function HomePage() {
                       <span className="font-medium">Status:</span>{" "}
                       {selectedTransaction.status}
                     </p>
+
+                    {selectedTransaction.failureReason && (
+                      <p>
+                        <span className="font-medium">Reason:</span>{" "}
+                        {selectedTransaction.failureReason}
+                      </p>
+                    )}
 
                     <p>
                       <span className="font-medium">Attempts:</span>{" "}

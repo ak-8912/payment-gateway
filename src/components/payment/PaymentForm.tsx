@@ -12,6 +12,7 @@ import {
   validateExpiry,
 } from "@/lib/validateCard";
 import { formatCardNumber } from "@/lib/formatCardNumber";
+import { PaymentFormPayload } from "@/types/payment";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -53,6 +54,7 @@ export default function PaymentForm() {
   const values = watch();
 
   const cardType = detectCardType(values.cardNumber || "");
+  const canSubmit = status === "IDLE";
 
   const onSubmit = async (data: FormValues) => {
     setPaymentDetails({
@@ -62,10 +64,13 @@ export default function PaymentForm() {
     });
 
     await pay({
-      ...data,
       amount: Number(data.amount),
       name: data.cardholderName,
-    });
+      currency: data.currency,
+      cardNumber: data.cardNumber,
+      expiry: data.expiry,
+      cvv: data.cvv,
+    } satisfies PaymentFormPayload);
   };
 
   return (
@@ -144,6 +149,7 @@ export default function PaymentForm() {
             placeholder="100"
             error={errors.amount?.message}
             {...register("amount", {
+              valueAsNumber: true,
               required: "Amount required",
               min: {
                 value: 1,
@@ -174,7 +180,7 @@ export default function PaymentForm() {
 
         <Button
           type="submit"
-          disabled={!isValid || status === "PROCESSING"}
+          disabled={!isValid || !canSubmit}
           className="h-11 w-full text-sm"
         >
           {status === "PROCESSING" ? "Processing..." : "Pay Now"}

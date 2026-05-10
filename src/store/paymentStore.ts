@@ -1,11 +1,18 @@
 import { create } from "zustand";
-import { PaymentDetails, PaymentStatus, Transaction } from "@/types/payment";
+import {
+  PaymentDetails,
+  PaymentPayload,
+  PaymentStatus,
+  Transaction,
+} from "@/types/payment";
 
 interface PaymentState {
   status: PaymentStatus;
   attempts: number;
   transactionId: string | null;
   paymentDetails: PaymentDetails | null;
+  currentPayload: PaymentPayload | null;
+  failureReason: string | null;
   history: Transaction[];
 
   setStatus: (status: PaymentStatus) => void;
@@ -13,6 +20,9 @@ interface PaymentState {
   resetAttempts: () => void;
   setTransactionId: (id: string) => void;
   setPaymentDetails: (details: PaymentDetails) => void;
+  setCurrentPayload: (payload: PaymentPayload) => void;
+  setFailureReason: (reason: string | null) => void;
+  resetPayment: () => void;
   addTransaction: (tx: Transaction) => void;
   setHistory: (history: Transaction[]) => void;
 }
@@ -22,6 +32,8 @@ export const usePaymentStore = create<PaymentState>((set) => ({
   attempts: 0,
   transactionId: null,
   paymentDetails: null,
+  currentPayload: null,
+  failureReason: null,
   history: [],
 
   setStatus: (status) => set({ status }),
@@ -33,6 +45,20 @@ export const usePaymentStore = create<PaymentState>((set) => ({
   setTransactionId: (id) => set({ transactionId: id }),
 
   setPaymentDetails: (details) => set({ paymentDetails: details }),
+
+  setCurrentPayload: (payload) => set({ currentPayload: payload }),
+
+  setFailureReason: (reason) => set({ failureReason: reason }),
+
+  resetPayment: () =>
+    set({
+      status: "IDLE",
+      attempts: 0,
+      transactionId: null,
+      paymentDetails: null,
+      currentPayload: null,
+      failureReason: null,
+    }),
 
   addTransaction: (tx: Transaction) =>
     set((s) => {

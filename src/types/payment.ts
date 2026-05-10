@@ -15,6 +15,8 @@ export interface PaymentPayload {
   name: string;
 }
 
+export type PaymentFormPayload = Omit<PaymentPayload, "id">;
+
 export interface PaymentDetails {
   amount: number;
   currency: "INR" | "USD";
@@ -26,6 +28,7 @@ export interface Transaction {
   amount: number;
   currency?: "INR" | "USD";
   cardholderName?: string;
+  failureReason?: string;
   status: PaymentStatus;
   timestamp: number;
   attempts: number;

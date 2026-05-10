@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useRef } from "react";
+
 import { PaymentStatus } from "@/types/payment";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -9,11 +11,24 @@ interface Props {
 }
 
 export default function StatusScreen({ status, reason }: Props) {
+  const statusRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (status !== "IDLE") {
+      statusRef.current?.focus({ preventScroll: true });
+    }
+  }, [status]);
+
   if (status === "IDLE") return null;
 
   return (
     <Card className="mt-6">
-      <CardContent className="p-6 text-center">
+      <CardContent
+        ref={statusRef}
+        role={status === "PROCESSING" ? "status" : "alert"}
+        tabIndex={-1}
+        className="p-6 text-center outline-none"
+      >
         {status === "PROCESSING" && (
           <>
             <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-muted border-t-primary" />
@@ -52,7 +67,7 @@ export default function StatusScreen({ status, reason }: Props) {
             </h2>
 
             <p className="mt-2 text-muted-foreground">
-              Slow network or gateway timeout.
+              {reason || "Slow network or gateway timeout."}
             </p>
           </>
         )}

@@ -1,6 +1,15 @@
 import { NextResponse } from "next/server";
 
-export async function POST() {
+export async function POST(request: Request) {
+  const payload = (await request.json()) as { id?: string };
+
+  if (!payload.id) {
+    return NextResponse.json(
+      { status: "FAILED", reason: "Missing transaction ID" },
+      { status: 400 }
+    );
+  }
+
   const rand = Math.random();
 
   if (rand < 0.6) {
