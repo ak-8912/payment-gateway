@@ -1,37 +1,98 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Payment Gateway UI
 
-## Getting Started
+A simulated payment gateway built with Next.js App Router and TypeScript. The app demonstrates a full client-side payment lifecycle without using a third-party payment SDK.
 
-First, run the development server:
+## Features
+
+- Payment form with real-time validation
+- Card number formatting and card type detection for Visa, Mastercard, and Amex
+- Live payment card preview
+- Currency selector for INR and USD
+- Mock gateway route at `/api/pay`
+- Payment states: Idle, Processing, Success, Failed, and Timeout
+- AbortController timeout handling after 6 seconds
+- Retry flow with a maximum of 3 attempts per transaction
+- Frontend-generated transaction IDs using `crypto.randomUUID()`
+- Transaction history persisted in `localStorage`
+- Clickable history records with detailed transaction view
+- ShadCN UI components for form controls, cards, buttons, tabs, badges, and selects
+
+## Tech Stack
+
+- Next.js App Router
+- TypeScript
+- React Hook Form
+- Zustand
+- Tailwind CSS
+- ShadCN UI
+
+## Setup
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open the app:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Run checks:
 
-## Learn More
+```bash
+npm run lint
+npx tsc --noEmit
+npm run build
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```text
+src/app/page.tsx                 Main tabbed payment/history page
+src/app/api/pay/route.ts         Mock payment gateway route handler
+src/components/payment/          Payment form, card preview, status, retry UI
+src/components/history/          Transaction history list and rows
+src/components/ui/               ShadCN UI components
+src/hooks/usePayment.ts          Payment lifecycle and gateway request logic
+src/store/paymentStore.ts        Zustand payment state and history
+src/lib/                         Card detection, formatting, validation helpers
+src/types/                       Shared TypeScript types
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Mock Gateway Behavior
 
-## Deploy on Vercel
+The `/api/pay` route randomly returns:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Success: about 60%
+- Failed: about 25%, with a readable reason such as `Insufficient funds`
+- Timeout simulation: about 15%, delayed for 8 seconds
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# payment-gateway
+The frontend cancels requests after 6 seconds with `AbortController`, then shows a friendly timeout message.
+
+## Assumptions
+
+- This is a simulation only. Card data is never sent to a real payment processor.
+- Transaction history is stored in `localStorage`, so it is browser-specific and not shared across devices.
+- The mock gateway validates that a transaction ID exists, but does not perform real card authorization.
+- Retry attempts reuse the same frontend-generated transaction ID and stored payload.
+- The processing state is kept visible for roughly 2 seconds, even if the mock API responds immediately, to make the lifecycle clear.
+- Existing history records from older versions of the app may not include cardholder name, currency, or failure reason, so the UI falls back to readable defaults.
+
+## What I Would Improve With More Time
+
+- Add automated tests for validation utilities, payment lifecycle, retry limits, and history persistence.
+- Add Playwright coverage for the mobile and desktop payment flows.
+- Replace `localStorage` persistence with a small backend store or database-backed transaction log.
+- Add stronger card validation, such as a Luhn check and better brand-specific length rules.
+- Add masked card numbers to history instead of showing only the transaction ID.
+- Improve accessibility with richer live-region messaging and keyboard-focused history/detail navigation.
+- Add deterministic gateway test modes so success, failure, and timeout flows can be tested without relying on randomness.
