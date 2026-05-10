@@ -11,12 +11,17 @@ import TransactionHistory from "@/components/history/TransactionHistory";
 import { usePaymentStore } from "@/store/paymentStore";
 import { Transaction } from "@/types/payment";
 import { usePayment } from "@/hooks/usePayment";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function HomePage() {
   const {
     status,
     attempts,
     history,
+    paymentDetails,
     setStatus,
     addTransaction,
     transactionId,
@@ -38,7 +43,7 @@ export default function HomePage() {
       // parsed.forEach((tx) => addTransaction(tx));
       setHistory(parsed);
     }
-  }, [addTransaction]);
+  }, [setHistory]);
 
   // Save history
   useEffect(() => {
@@ -52,7 +57,9 @@ export default function HomePage() {
 
       const transaction: Transaction = {
         id: transactionId,
-        amount: 0,
+        amount: paymentDetails?.amount ?? 0,
+        currency: paymentDetails?.currency ?? "INR",
+        cardholderName: paymentDetails?.cardholderName,
         status,
         timestamp: Date.now(),
         attempts,
@@ -60,80 +67,110 @@ export default function HomePage() {
 
       addTransaction(transaction);
     }
-  }, [status, attempts, transactionId, addTransaction]);
+  }, [status, attempts, transactionId, paymentDetails, addTransaction]);
 
   return (
-    <main className="min-h-screen bg-gray-100 py-10 px-4">
+    <main className="min-h-screen bg-muted px-4 py-10">
       <div className="mx-auto max-w-6xl space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold">Payment Gateway</h1>
+        <h1 className="text-3xl font-bold">Payment Gateway</h1>
 
-          <p className="text-gray-600 mt-2">
-            Simulated payment flow using Next.js
-          </p>
-        </div>
+        <Tabs defaultValue="payment" className="gap-4">
+          <TabsList className="w-full justify-start sm:w-fit">
+            <TabsTrigger value="payment" className="min-w-28">
+              Payment
+            </TabsTrigger>
+            <TabsTrigger value="history" className="min-w-28">
+              History
+            </TabsTrigger>
+          </TabsList>
 
-        <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
-          <div className="rounded-2xl bg-white p-6 shadow-sm">
-            <PaymentForm />
+          <TabsContent value="payment">
+            <Card>
+              <CardContent className="p-6">
+                <PaymentForm />
 
-            <StatusScreen status={status} />
+                <StatusScreen status={status} />
 
-            {(status === "FAILED" || status === "TIMEOUT") && (
-              <RetrySection attempts={attempts} onRetry={retryPayment} />
-            )}
+                {(status === "FAILED" || status === "TIMEOUT") && (
+                  <RetrySection attempts={attempts} onRetry={retryPayment} />
+                )}
 
-            {(status === "SUCCESS" ||
-              status === "FAILED" ||
-              status === "TIMEOUT") && (
-              <button
-                onClick={() => setStatus("IDLE")}
-                className="mt-4 w-full rounded-lg border py-3"
-              >
-                Start New Payment
-              </button>
-            )}
-          </div>
+                {(status === "SUCCESS" ||
+                  status === "FAILED" ||
+                  status === "TIMEOUT") && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setStatus("IDLE")}
+                    className="mt-4 h-11 w-full text-sm"
+                  >
+                    Start New Payment
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-          <div className="rounded-2xl bg-white p-6 shadow-sm">
-            <div className="mb-4">
-              <h2 className="text-xl font-semibold">Transaction History</h2>
+          <TabsContent value="history">
+            <div className="grid gap-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Transaction History</CardTitle>
+                </CardHeader>
+
+                <CardContent>
+                  <TransactionHistory
+                    transactions={history}
+                    onSelect={(tx) => setSelectedTransaction(tx)}
+                  />
+                </CardContent>
+              </Card>
+
+              {selectedTransaction && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Transaction Details</CardTitle>
+                  </CardHeader>
+
+                  <CardContent className="space-y-3 text-sm">
+                    <Separator />
+
+                    <p>
+                      <span className="font-medium">Cardholder:</span>{" "}
+                      {selectedTransaction.cardholderName || "Unknown"}
+                    </p>
+
+                    <p>
+                      <span className="font-medium">Transaction ID:</span>{" "}
+                      {selectedTransaction.id}
+                    </p>
+
+                    <p>
+                      <span className="font-medium">Amount:</span>{" "}
+                      {selectedTransaction.currency === "USD" ? "$" : "₹"}{" "}
+                      {selectedTransaction.amount}
+                    </p>
+
+                    <p>
+                      <span className="font-medium">Status:</span>{" "}
+                      {selectedTransaction.status}
+                    </p>
+
+                    <p>
+                      <span className="font-medium">Attempts:</span>{" "}
+                      {selectedTransaction.attempts}
+                    </p>
+
+                    <p>
+                      <span className="font-medium">Timestamp:</span>{" "}
+                      {new Date(selectedTransaction.timestamp).toLocaleString()}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
-
-            <TransactionHistory
-              transactions={history}
-              onSelect={(tx) => setSelectedTransaction(tx)}
-            />
-          </div>
-        </div>
-
-        {selectedTransaction && (
-          <div className="rounded-2xl bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-semibold mb-4">Transaction Details</h2>
-
-            <div className="space-y-2 text-sm">
-              <p>
-                <span className="font-medium">Transaction ID:</span>{" "}
-                {selectedTransaction.id}
-              </p>
-
-              <p>
-                <span className="font-medium">Status:</span>{" "}
-                {selectedTransaction.status}
-              </p>
-
-              <p>
-                <span className="font-medium">Attempts:</span>{" "}
-                {selectedTransaction.attempts}
-              </p>
-
-              <p>
-                <span className="font-medium">Timestamp:</span>{" "}
-                {new Date(selectedTransaction.timestamp).toLocaleString()}
-              </p>
-            </div>
-          </div>
-        )}
+          </TabsContent>
+        </Tabs>
       </div>
     </main>
   );

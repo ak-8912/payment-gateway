@@ -13,7 +13,7 @@ export const usePayment = () => {
   } = usePaymentStore();
 
   const makePayment = async (
-    payload: PaymentPayload,
+    payload: Partial<PaymentPayload>,
     existingTransactionId?: string
   ) => {
     const txId = existingTransactionId || transactionId || crypto.randomUUID();
@@ -57,16 +57,16 @@ export const usePayment = () => {
       }
 
       return data;
-    } catch (error) {
+    } catch {
       setStatus("TIMEOUT");
     }
   };
 
-  const pay = async (payload: PaymentPayload) => {
+  const pay = async (payload: Partial<PaymentPayload>) => {
     return makePayment(payload);
   };
 
-  const retryPayment = async (payload: PaymentPayload) => {
+  const retryPayment = async (payload: Partial<PaymentPayload> = {}) => {
     if (attempts >= 3) return;
 
     return makePayment(payload, transactionId || undefined);

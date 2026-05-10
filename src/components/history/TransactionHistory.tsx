@@ -2,6 +2,7 @@
 
 import { Transaction } from "@/types/payment";
 import TransactionItem from "./TransactionItem";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface Props {
   transactions: Transaction[];
@@ -11,9 +12,11 @@ interface Props {
 export default function TransactionHistory({ transactions, onSelect }: Props) {
   if (!transactions.length) {
     return (
-      <div className="rounded-xl border p-6 text-center text-gray-500">
-        No transactions yet.
-      </div>
+      <Card>
+        <CardContent className="p-6 text-center text-muted-foreground">
+          No transactions yet.
+        </CardContent>
+      </Card>
     );
   }
 

@@ -2,6 +2,10 @@
 
 import { InputHTMLAttributes } from "react";
 
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+
 interface CardInputProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
   error?: string;
@@ -15,24 +19,20 @@ export default function CardInput({
 }: CardInputProps) {
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-sm font-medium text-gray-700">
+      <Label htmlFor={id} className="text-foreground">
         {label}
-      </label>
+      </Label>
 
-      <input
+      <Input
         id={id}
         aria-invalid={!!error}
         aria-describedby={error ? `${id}-error` : undefined}
-        className={`
-          w-full rounded-lg border px-4 py-3 outline-none transition
-          ${error ? "border-red-500" : "border-gray-300"}
-          focus:border-black
-        `}
+        className={cn("h-11 text-sm", error && "border-destructive")}
         {...props}
       />
 
       {error && (
-        <p id={`${id}-error`} className="text-sm text-red-500">
+        <p id={`${id}-error`} className="text-xs text-destructive">
           {error}
         </p>
       )}

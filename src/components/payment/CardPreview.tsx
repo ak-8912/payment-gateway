@@ -1,6 +1,8 @@
 "use client";
 
 import { CardType } from "@/types/card";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface Props {
   name: string;
@@ -11,28 +13,30 @@ interface Props {
 
 export default function CardPreview({ name, number, expiry, cardType }: Props) {
   return (
-    <div className="rounded-2xl bg-black text-white p-6 shadow-lg min-h-[220px] flex flex-col justify-between">
-      <div className="flex justify-between items-center">
-        <p className="text-sm opacity-80">Payment Card</p>
+    <Card className="min-h-[220px] bg-primary text-primary-foreground shadow-lg max-w-md">
+      <CardContent className="flex flex-1 flex-col justify-between p-6">
+        <div className="flex items-center justify-between">
+          <p className="text-sm opacity-80">Payment Card</p>
 
-        <div className="text-sm font-semibold">{cardType}</div>
-      </div>
-
-      <div className="text-2xl tracking-widest font-mono">
-        {number || "•••• •••• •••• ••••"}
-      </div>
-
-      <div className="flex justify-between items-end">
-        <div>
-          <p className="text-xs opacity-70">Card Holder</p>
-          <p className="uppercase tracking-wide">{name || "YOUR NAME"}</p>
+          <Badge variant="secondary">{cardType}</Badge>
         </div>
 
-        <div>
-          <p className="text-xs opacity-70">Expires</p>
-          <p>{expiry || "MM/YY"}</p>
+        <div className="text-2xl tracking-widest">
+          {number || "•••• •••• •••• ••••"}
         </div>
-      </div>
-    </div>
+
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <p className="text-xs opacity-70">Card Holder</p>
+            <p className="uppercase tracking-wide">{name || "YOUR NAME"}</p>
+          </div>
+
+          <div>
+            <p className="text-xs opacity-70">Expires</p>
+            <p>{expiry || "MM/YY"}</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

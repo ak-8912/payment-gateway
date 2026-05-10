@@ -12,7 +12,15 @@ import {
   validateExpiry,
 } from "@/lib/validateCard";
 import { formatCardNumber } from "@/lib/formatCardNumber";
-import { PaymentPayload } from "@/types/payment";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface FormValues {
   cardholderName: string;
@@ -27,6 +35,7 @@ export default function PaymentForm() {
   const { pay } = usePayment();
 
   const status = usePaymentStore((s) => s.status);
+  const setPaymentDetails = usePaymentStore((s) => s.setPaymentDetails);
 
   const {
     register,
@@ -46,12 +55,22 @@ export default function PaymentForm() {
   const cardType = detectCardType(values.cardNumber || "");
 
   const onSubmit = async (data: FormValues) => {
-    await pay(data as unknown as PaymentPayload);
+    setPaymentDetails({
+      amount: Number(data.amount),
+      currency: data.currency,
+      cardholderName: data.cardholderName,
+    });
+
+    await pay({
+      ...data,
+      amount: Number(data.amount),
+      name: data.cardholderName,
+    });
   };
 
   return (
     <div className="grid gap-8 lg:grid-cols-2">
-      <div>
+      <div className="flex justify-center h-fit">
         <CardPreview
           name={values.cardholderName}
           number={values.cardNumber}
@@ -134,25 +153,32 @@ export default function PaymentForm() {
           />
 
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium">Currency</label>
+            <Label htmlFor="currency">Currency</Label>
 
-            <select
-              className="border rounded-lg px-4 py-3"
-              {...register("currency")}
+            <Select
+              value={values.currency}
+              onValueChange={(currency: FormValues["currency"]) =>
+                setValue("currency", currency, { shouldValidate: true })
+              }
             >
-              <option value="INR">INR</option>
-              <option value="USD">USD</option>
-            </select>
+              <SelectTrigger id="currency" className="!h-11 w-full text-sm">
+                <SelectValue placeholder="Currency" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="INR">INR</SelectItem>
+                <SelectItem value="USD">USD</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
-        <button
+        <Button
           type="submit"
           disabled={!isValid || status === "PROCESSING"}
-          className="w-full rounded-lg bg-black text-white py-3 disabled:opacity-50"
+          className="h-11 w-full text-sm"
         >
           {status === "PROCESSING" ? "Processing..." : "Pay Now"}
-        </button>
+        </Button>
       </form>
     </div>
   );

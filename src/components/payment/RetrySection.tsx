@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 interface Props {
   attempts: number;
   maxAttempts?: number;
@@ -17,22 +19,23 @@ export default function RetrySection({
 
   return (
     <div className="mt-6 flex flex-col items-center gap-3">
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-muted-foreground">
         Attempt {attempts} of {maxAttempts}
       </p>
 
       {limitReached ? (
-        <p className="text-red-500 font-medium">
+        <p className="font-medium text-destructive">
           Maximum retry attempts reached.
         </p>
       ) : (
-        <button
+        <Button
+          type="button"
           disabled={disabled}
           onClick={onRetry}
-          className="rounded-lg bg-black text-white px-5 py-3 disabled:opacity-50"
+          className="h-10 px-5 text-sm"
         >
           Retry Payment
-        </button>
+        </Button>
       )}
     </div>
   );
